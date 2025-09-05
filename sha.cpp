@@ -5,31 +5,38 @@
 atomic<uint64_t> counter = 0; 
 
 
-string next_suffix() {    
-    uint64_t value = counter.fetch_add(1, memory_order_relaxed);
+string next_suffix(){
+    string s(SUFFIX_LENGTH, '\0'); 
+    uint64_t value = counter.fetch_add(1, memory_order_relaxed);     
 
-    const int base = 94;              // 94 printable ASCII characters
-    string s(SUFFIX_LENGTH, '\0');
-
-    for (int i = 0; i < SUFFIX_LENGTH; i++) {
-        int idx = value % base;
-        s[i] = static_cast<char>(33 + idx);  // Map 0 → '!', 93 → '~' 
-        value /= base;
+    for(int i=0; i<SUFFIX_LENGTH; i++){
+        unsigned char c = static_cast<unsigned char>((value >> (i * 8)) & 0xFF);
+        // c = 33 + (c % (125 - 33 + 1)); // to void /n /r /t 
+        c = 33 + (c % 94); // to void /n /r /t 
+        s[i] = static_cast<char>(c);
     }
-    return s;
+
+    return s; 
 }
 
-string sha_1(const string& input) {
-    unsigned char hash[SHA_DIGEST_LENGTH];
-    SHA1(reinterpret_cast<const unsigned char*>(input.c_str()), input.size(), hash);
+string sha_1(const string& input){
+    unsigned char hash[SHA_DIGEST_LENGTH]; 
+    SHA1(reinterpret_cast<const unsigned char*>(input.c_str()), input.size(), hash); 
 
-    stringstream ss;
-    ss << hex << nouppercase;  // force lowercase
-    for (int i = 0; i < SHA_DIGEST_LENGTH; i++) {
-        ss << setw(2) << setfill('0') << (unsigned int)hash[i];
+    string result; 
+    result.resize(SHA_DIGEST_LENGTH*2, '\0'); 
+    static const char* hexLookup = "0123456789abcdef"; 
+
+    for(int i=0; i<SHA_DIGEST_LENGTH; i++){
+        unsigned char byte = hash[i];
+        result[2*i] = hexLookup[((byte >> 4) & 0xF )]; //rotate and get the high nibble
+        result[2*i + 1] = hexLookup[byte & 0xF ]; //get the low nibble
     }
-    return ss.str();
+
+    return result; 
 }
+
+
 
 // int main(){
 //     string s = "hello world"; 

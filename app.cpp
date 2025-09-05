@@ -27,12 +27,16 @@ void handle_server(SSL* ssl) {
             cout << "pow command received. finding suffix.. " << endl;
              
             authdata = parts[1];
+            int difficulty = stoi(parts[2]);
+
             cout << "received authdata : " << authdata << endl;
+            cout << "received difficulty : " << difficulty << endl; 
+            
             auto now1 = chrono::system_clock::now();
             time_t now_c1 = chrono::system_clock::to_time_t(now1);
 
             cout << "Program started at: " << std::ctime(&now_c1) << endl;
-            int difficulty = stoi(parts[2]);
+            
             string suffix = solve_pow(authdata, difficulty);
             cout << "suffix found : " << suffix << endl;    
             
